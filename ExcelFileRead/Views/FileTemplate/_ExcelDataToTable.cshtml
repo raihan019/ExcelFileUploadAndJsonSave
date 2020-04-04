@@ -1,0 +1,38 @@
+﻿
+@model IEnumerable<ExcelFileRead.Models.FileDataModel>
+@{
+    int rowCount = 1;
+}
+    <div class="box-header">
+        <div class="col-md-12">
+            <h4>Uploaded Data List</h4>
+            <a class="btn  btn-info btn-sm" onclick="SaveJsonData()">Save Json Data</a>
+            <a class="btn  btn-primary btn-sm" onclick="ExcelExport()">Export In Excel</a>
+        </div>
+    </div>
+<div class="box-body" id="excelDataTableBody">
+    <table id="excelDataTable" class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Requierment</th>
+                <th>Response</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @foreach (var item in Model)
+            {
+                <tr id="tr_@rowCount" style="font-weight: 100; line-height: 1.5">
+                    <td><input id="requierment_@rowCount" class="form-control" value="@item.Requirement"  readonly /> </td>
+                    <td><input id="response_@rowCount" class="form-control" /> </td>
+                    <td><button type="button" class="btn btn-danger" onclick="RowRemove(@rowCount)">Remove</button></td>
+                </tr>
+                rowCount++;
+            }
+        </tbody>
+    </table>
+</div>
+
+
+

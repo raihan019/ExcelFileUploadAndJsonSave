@@ -1,0 +1,172 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<div class="col-md-12">
+    <!-- Block buttons -->
+    <div class="box">
+        <div class="box-header">
+            <h3 class="box-title">Download & Upload Data Template</h3>
+        </div>
+        <div class="box-body">
+
+            <div class="row" style="padding-top: 10px">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <input type="file" class="form-control" id="uploadedFile" />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <a class="btn btn-success btn-sm" onclick="UploadDataSheet()"> Upload Data Sheet</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="col-md-offset-4 col-md-3">
+    <div id="loader" style="text-align: center">
+        <img src="~/Content/Images/loader.gif" />
+    </div>
+</div>
+
+<div class="box col-md-12" id="exportedDataList"></div>
+
+@section scripts{
+
+    <script>
+        $(function () {
+            $("#loader").hide();
+        });
+
+        function UploadDataSheet() {
+
+            $("#loader").show();
+            var fileUpload = $("#uploadedFile").get(0);
+            var files = fileUpload.files;
+            var fileData = new FormData();
+            // Looping over all files and add it to FormData object
+            for (var i = 0; i < files.length; i++) {
+                fileData.append(files[i].name, files[i]);
+           }
+            debugger;
+
+            var urlpath = '@Url.Action("RetrieveDataFromExcel", "FileTemplate")';
+            $.ajax({
+                url: urlpath,
+                type: "post",
+                dataType: "html",
+                data: fileData,
+                processData: false,
+                contentType: false,
+                async: true,
+                success: function (result) {
+
+                    if (result) {
+                        $('#exportedDataList').empty();
+                        $('#exportedDataList').html(result);
+                        $("#loader").hide();
+                    }
+
+                },
+                error: function (err) {
+                    alert(err.statusText);
+                    $("#loader").hide();
+                }
+            });
+
+        }
+        function RowRemove(id) {
+            $('#tr_' + id).remove();
+        }
+
+        function SaveJsonData() {
+            $("#loader").show();
+            var jsonObj = [];
+            $('#excelDataTable tbody tr').each(function () {
+
+                var myObj = {};
+
+                var rowNo = $(this).prop("id").split("_")[1];
+                myObj["Requirement"] = $('#requierment_' + rowNo).val();
+                myObj["Response"] = $('#response_' + rowNo).val();
+
+                jsonObj.push(myObj);
+
+            });
+            debugger;
+            var urlpath = '@Url.Action("SaveDataInJson", "FileTemplate")';
+
+            $.ajax({
+                contentType: "application/json; charset=utf-8",
+                data: JSON.stringify(jsonObj),
+                url: urlpath,
+                type: "POST",
+                success: function (result) {
+                    debugger;
+                    if (result) {
+                       
+                        $("#loader").hide();
+                        alert("Save Successful ");
+
+                    } else {
+
+                        ShowMessage('Error!!!');
+                    }
+
+                }
+            });
+
+
+        }
+
+
+        function ExcelExport(tableId ='excelDataTable') {
+
+
+            var tab_text = "<table border='2px'>";
+
+            var table = $("#" + tableId+" tbody");
+            table.find('tr').each(function (i, el) {
+
+                var $tds = $(this).find('td'),
+                    requierment = $tds.eq(0).find('input').val(),
+                    response = $tds.eq(1).find('input').val();
+
+                tab_text = tab_text + "<tr><td>" + requierment + "</td><td>" + response + "</td></tr>";
+            });
+
+            tab_text = tab_text + "</table>";
+
+            tab_text = tab_text.replace(/<A[^>]*>|<\/A>/g, ""); //remove if u want links in your table
+            tab_text = tab_text.replace(/<img[^>]*>/gi, "");  // remove if u want images in your table
+
+
+            //getting values of current time for generating the file name
+            var dt = new Date();
+            var day = dt.getDate();
+            var month = dt.getMonth() + 1;
+            var year = dt.getFullYear();
+            var hour = dt.getHours();
+            var mins = dt.getMinutes();
+            var postfix = day + "." + month + "." + year + "_" + hour + "." + mins;
+
+            var a = document.createElement('a');
+            var data_type = 'data:application/vnd.ms-excel';
+            a.href = data_type + ', ' + encodeURIComponent(tab_text);
+
+            //setting the file name
+            a.download = 'exported_table_' + postfix + '.xls';
+            //triggering the function
+            a.click();
+            //just in case, prevent default behaviour
+            e.preventDefault();
+
+        }
+
+
+    </script>
+}
+
